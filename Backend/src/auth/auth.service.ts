@@ -73,7 +73,7 @@ export class AuthService {
       where: { email: dto.email },
       relations: ['client'],
     });
-
+       console.log(user)
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -88,6 +88,7 @@ export class AuthService {
       clientId: user.client.id,
       role: user.role,
     };
+    console.log(payload)
 
     const token = this.jwtService.sign(payload);
 
