@@ -3,9 +3,7 @@ import { AppModule } from './app.module';
 import { Client } from 'pg';
 import { ValidationPipe } from '@nestjs/common';
 
-
 async function bootstrap() {
-
   // Create DB if it doesn't exist
   const dbName = process.env.DB_NAME || 'assignment';
 
@@ -19,7 +17,9 @@ async function bootstrap() {
 
   await pgClient.connect();
 
-  const res = await pgClient.query(`SELECT 1 FROM pg_database WHERE datname='${dbName}'`);
+  const res = await pgClient.query(
+    `SELECT 1 FROM pg_database WHERE datname='${dbName}'`,
+  );
 
   if (res.rowCount === 0) {
     console.log(`⚡ Database "${dbName}" not found. Creating...`);

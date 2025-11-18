@@ -1,4 +1,3 @@
-// projects/projects.service.ts
 import {
   BadRequestException,
   ConflictException,
@@ -14,7 +13,6 @@ import { ProjectUser } from '../project-users/project-user.entity';
 import { AssignUserDto } from 'src/project-users/dto/assign-user.dto';
 import { User } from 'src/auth/user.entity';
 import { checkProjectAdminOrOwner } from './helpers/rbac.helper';
-import { count } from 'console';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
@@ -27,7 +25,7 @@ export class ProjectsService {
     private projectUserRepo: Repository<ProjectUser>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) { }
+  ) {}
 
   async createProject(dto: CreateProjectDto, user: any) {
     console.log('Creating project for user:', user);
@@ -78,14 +76,18 @@ export class ProjectsService {
     }
 
     // 2. Check RBAC – Only Global Admin OR Project Owner
-    await checkProjectAdminOrOwner(projectId, currentUser, this.projectUserRepo);
+    await checkProjectAdminOrOwner(
+      projectId,
+      currentUser,
+      this.projectUserRepo,
+    );
 
     // 3. User must exist
     const userToAssign = await this.userRepo.findOne({
       where: { id: user_id },
       relations: ['client'],
     });
-    console.log(userToAssign)
+    console.log(userToAssign);
 
     if (!userToAssign) {
       throw new NotFoundException('User not found');
@@ -94,7 +96,7 @@ export class ProjectsService {
     // 4. Prevent assigning users from another client
     if (userToAssign.client.id !== project.client.id) {
       throw new ForbiddenException(
-        'User does not belong to the same client/company'
+        'User does not belong to the same client/company',
       );
     }
 
@@ -125,9 +127,18 @@ export class ProjectsService {
     };
   }
 
-  async updateUserRole(projectId: string, userId: string, newRole: string, currentUser: any) {
+  async updateUserRole(
+    projectId: string,
+    userId: string,
+    newRole: string,
+    currentUser: any,
+  ) {
     // RBAC Check
-    await checkProjectAdminOrOwner(projectId, currentUser, this.projectUserRepo);
+    await checkProjectAdminOrOwner(
+      projectId,
+      currentUser,
+      this.projectUserRepo,
+    );
 
     // Load existing ProjectUser
     const assignment = await this.projectUserRepo.findOne({
@@ -154,7 +165,11 @@ export class ProjectsService {
 
   async removeUser(projectId: string, userId: string, currentUser: any) {
     // RBAC Check
-    await checkProjectAdminOrOwner(projectId, currentUser, this.projectUserRepo);
+    await checkProjectAdminOrOwner(
+      projectId,
+      currentUser,
+      this.projectUserRepo,
+    );
     const assignment = await this.projectUserRepo.findOne({
       where: {
         project: { id: projectId },
@@ -198,7 +213,7 @@ export class ProjectsService {
 
     return {
       users: assignedUsers,
-      count: assignedUsers.length
+      count: assignedUsers.length,
     };
   }
 
@@ -212,7 +227,7 @@ export class ProjectsService {
     if (!project) {
       throw new NotFoundException('Project not found');
     }
-    console.log(currentUser, project.client.id)
+    console.log(currentUser, project.client.id);
 
     // Ensure user belongs to same client
     if (project.client.id !== currentUser.clientId) {
@@ -233,7 +248,11 @@ export class ProjectsService {
     };
   }
 
-  async updateProject(projectId: string, dto: UpdateProjectDto, currentUser: any) {
+  async updateProject(
+    projectId: string,
+    dto: UpdateProjectDto,
+    currentUser: any,
+  ) {
     // Prevent empty and wrong field updates
     if (!dto.name?.trim() && !dto.description?.trim()) {
       throw new BadRequestException(
@@ -241,7 +260,11 @@ export class ProjectsService {
       );
     }
     // RBAC Check
-    await checkProjectAdminOrOwner(projectId, currentUser, this.projectUserRepo);
+    await checkProjectAdminOrOwner(
+      projectId,
+      currentUser,
+      this.projectUserRepo,
+    );
     // Load project
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
@@ -266,7 +289,11 @@ export class ProjectsService {
 
   async deleteProject(projectId: string, currentUser: any) {
     // RBAC Check
-    await checkProjectAdminOrOwner(projectId, currentUser, this.projectUserRepo);
+    await checkProjectAdminOrOwner(
+      projectId,
+      currentUser,
+      this.projectUserRepo,
+    );
 
     // Load project
     const project = await this.projectRepo.findOne({
@@ -302,5 +329,4 @@ export class ProjectsService {
       })),
     }));
   }
-
 }

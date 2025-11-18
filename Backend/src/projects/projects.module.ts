@@ -8,11 +8,11 @@ import { User } from 'src/auth/user.entity';
 import { Client } from 'src/clients/client.entity';
 
 @Module({
-   imports: [
-    TypeOrmModule.forFeature([Project, ProjectUser,User,Client]), // 👈 REQUIRED
+  imports: [
+    TypeOrmModule.forFeature([Project, ProjectUser, User, Client]), // 👈 REQUIRED
   ],
   providers: [ProjectsService],
   controllers: [ProjectsController],
-  exports :[ProjectsService]
+  exports: [ProjectsService],
 })
 export class ProjectsModule {}

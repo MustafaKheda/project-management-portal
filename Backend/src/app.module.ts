@@ -24,7 +24,7 @@ import { ProjectsModule } from './projects/projects.module';
     }),
     ClientsModule,
     AuthModule,
-    ProjectsModule
+    ProjectsModule,
   ],
 })
 export class AppModule {}

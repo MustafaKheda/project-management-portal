@@ -23,13 +23,13 @@ export class AuthService {
     private readonly clientRepo: Repository<Client>,
 
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   // ===========================
   // REGISTER USER
   // ===========================
   async register(dto: RegisterDto) {
-    console.log(dto)
+    console.log(dto);
     const existing = await this.userRepo.findOne({
       where: { email: dto.email },
     });
@@ -37,7 +37,9 @@ export class AuthService {
     if (existing) {
       throw new BadRequestException('Email already registered');
     }
-    const client = await this.clientRepo.findOne({ where: { id: dto.client_id } });
+    const client = await this.clientRepo.findOne({
+      where: { id: dto.client_id },
+    });
 
     if (!client) {
       throw new NotFoundException('Client company not found');
@@ -73,7 +75,7 @@ export class AuthService {
       where: { email: dto.email },
       relations: ['client'],
     });
-       console.log(user)
+    console.log(user);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -88,7 +90,6 @@ export class AuthService {
       clientId: user.client.id,
       role: user.role,
     };
-    console.log(payload)
 
     const token = this.jwtService.sign(payload);
 

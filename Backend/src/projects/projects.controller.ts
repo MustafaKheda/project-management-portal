@@ -20,7 +20,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
   async getProjects(@Req() req) {
@@ -42,7 +42,7 @@ export class ProjectsController {
   async updateProject(
     @Param('id') projectId: string,
     @Body() dto: UpdateProjectDto,
-    @Req() req
+    @Req() req,
   ) {
     return this.projectsService.updateProject(projectId, dto, req.user);
   }
@@ -56,7 +56,7 @@ export class ProjectsController {
   async assignUserToProject(
     @Param('id') projectId: string,
     @Body() dto: AssignUserDto,
-    @Req() req
+    @Req() req,
   ) {
     return this.projectsService.assignUser(projectId, dto, req.user);
   }
@@ -68,7 +68,12 @@ export class ProjectsController {
     @Body() dto: UpdateProjectUserRoleDto,
     @Req() req,
   ) {
-    return this.projectsService.updateUserRole(projectId, userId, dto.role, req.user);
+    return this.projectsService.updateUserRole(
+      projectId,
+      userId,
+      dto.role,
+      req.user,
+    );
   }
 
   @Delete(':id/users/:userId')
@@ -81,13 +86,7 @@ export class ProjectsController {
   }
 
   @Get(':id/users')
-  async getAssignedUsers(
-    @Param('id') projectId: string,
-    @Req() req,
-  ) {
+  async getAssignedUsers(@Param('id') projectId: string, @Req() req) {
     return this.projectsService.getAssignedUsers(projectId, req.user);
   }
-
-
-
 }

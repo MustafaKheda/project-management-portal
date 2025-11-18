@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Client } from '../clients/client.entity';
 import { ProjectUser } from '../project-users/project-user.entity';
 
@@ -18,7 +26,7 @@ export class Project {
 
   @OneToMany(() => ProjectUser, (pu) => pu.project)
   projectUsers: ProjectUser[];
-  
+
   @CreateDateColumn()
   created_at: Date;
 
