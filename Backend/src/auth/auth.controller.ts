@@ -6,7 +6,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   register(@Body() dto: RegisterDto) {
@@ -24,4 +24,6 @@ export class AuthController {
     console.log(req);
     return this.authService.getMe(req.user);
   }
+  
+
 }

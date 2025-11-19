@@ -7,8 +7,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { Not, Repository } from 'typeorm';
+import { User } from '../user/user.entity';
 import { Client } from '../clients/client.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -23,13 +23,13 @@ export class AuthService {
     private readonly clientRepo: Repository<Client>,
 
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   // ===========================
   // REGISTER USER
   // ===========================
   async register(dto: RegisterDto) {
-    console.log(dto);
+    console.log(dto, "dto in service", dto.client_id);
     const existing = await this.userRepo.findOne({
       where: { email: dto.email },
     });
@@ -39,7 +39,12 @@ export class AuthService {
     }
     const client = await this.clientRepo.findOne({
       where: { id: dto.client_id },
+      select: {
+        id: true,
+        name: true
+      }
     });
+    console.log(client, "client in service");
 
     if (!client) {
       throw new NotFoundException('Client company not found');
@@ -99,6 +104,7 @@ export class AuthService {
     };
   }
 
+
   // ===========================
   // GET CURRENT USER FROM JWT
   // ===========================
@@ -117,4 +123,6 @@ export class AuthService {
       clientId: found.client.id,
     };
   }
+
+  
 }

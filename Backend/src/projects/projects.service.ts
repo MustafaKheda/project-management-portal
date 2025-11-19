@@ -11,7 +11,7 @@ import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectUser } from '../project-users/project-user.entity';
 import { AssignUserDto } from 'src/project-users/dto/assign-user.dto';
-import { User } from 'src/auth/user.entity';
+import { User } from 'src/user/user.entity';
 import { checkProjectAdminOrOwner } from './helpers/rbac.helper';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -25,7 +25,7 @@ export class ProjectsService {
     private projectUserRepo: Repository<ProjectUser>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) { }
 
   async createProject(dto: CreateProjectDto, user: any) {
     console.log('Creating project for user:', user);
@@ -54,7 +54,26 @@ export class ProjectsService {
       client: { id: user.clientId },
     });
 
+
     await this.projectRepo.save(project);
+
+    if (user.role !== 'admin') {
+      // 4. Fetch the full project with relations
+      const userToAssign = await this.userRepo.findOne({
+        where: { id: user.id },
+        relations: ['client'],
+      });
+      if (!userToAssign) {
+        throw new NotFoundException('User not found');
+      }
+      // 5. Assign user
+      const assignment = this.projectUserRepo.create({
+        project,
+        user: userToAssign,
+        role: 'owner',
+      });
+      await this.projectUserRepo.save(assignment)
+    }
 
     return {
       message: 'Project created successfully',
@@ -87,8 +106,6 @@ export class ProjectsService {
       where: { id: user_id },
       relations: ['client'],
     });
-    console.log(userToAssign);
-
     if (!userToAssign) {
       throw new NotFoundException('User not found');
     }
@@ -238,7 +255,7 @@ export class ProjectsService {
       id: project.id,
       name: project.name,
       description: project.description,
-      assigned_users: project.projectUsers.map((pu) => ({
+      assignedUsers: project.projectUsers.map((pu) => ({
         id: pu.user.id,
         email: pu.user.email,
         role: pu.role,
@@ -308,25 +325,59 @@ export class ProjectsService {
     return { message: 'Project deleted successfully' };
   }
 
-  async getProjects(currentUser: any) {
-    const projects = await this.projectRepo.find({
-      where: {
-        client: { id: currentUser.clientId },
-      },
-      relations: ['projectUsers', 'projectUsers.user'], // 👈 ALWAYS include assigned users
+ async getProjects(currentUser: any, page = 1, limit = 10, search = "") {
+  const skip = (page - 1) * limit;
+
+  // Build base query
+  const query = this.projectRepo
+    .createQueryBuilder("project")
+    .leftJoinAndSelect("project.projectUsers", "projectUsers")
+    .leftJoinAndSelect("projectUsers.user", "user")
+    .where("project.clientId = :clientId", {
+      clientId: currentUser.clientId,
     });
 
-    return projects.map((project) => ({
-      id: project.id,
-      name: project.name,
-      description: project.description,
-      created_at: project.created_at,
-      updated_at: project.updated_at,
-      assigned_users: project.projectUsers.map((pu) => ({
-        id: pu.user.id,
-        email: pu.user.email,
-        role: pu.role,
-      })),
-    }));
+  // 🔎 1️⃣ Apply server-side search
+  if (search) {
+    query.andWhere("LOWER(project.name) LIKE :search", {
+      search: `%${search.toLowerCase()}%`,
+    });
   }
+
+  // 2️⃣ Get total count after filters
+  const total = await query.getCount();
+
+  // 3️⃣ Apply pagination
+  const projects = await query
+    .skip(skip)
+    .take(limit)
+    .orderBy("project.created_at", "DESC")
+    .getMany();
+
+  // 4️⃣ Format output
+  const data = projects.map((project) => ({
+    id: project.id,
+    name: project.name,
+    description: project.description,
+    created_at: project.created_at,
+    updated_at: project.updated_at,
+    assignedUsers: project.projectUsers.map((pu) => ({
+      id: pu.user.id,
+      email: pu.user.email,
+      role: pu.role,
+    })),
+  }));
+
+  return {
+    projects: data,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPrevPage: page > 1,
+    },
+  };
+}
 }

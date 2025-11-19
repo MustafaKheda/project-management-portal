@@ -24,7 +24,7 @@ export class Project {
   @ManyToOne(() => Client, (client) => client.projects)
   client: Client;
 
-  @OneToMany(() => ProjectUser, (pu) => pu.project)
+  @OneToMany(() => ProjectUser, (pu) => pu.project, { onDelete: 'CASCADE' })
   projectUsers: ProjectUser[];
 
   @CreateDateColumn()

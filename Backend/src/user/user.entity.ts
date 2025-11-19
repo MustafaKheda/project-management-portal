@@ -22,7 +22,7 @@ export class User {
   @Column({ default: 'member' }) // admin or member
   role: string;
 
-  @ManyToOne(() => Client, (client) => client.users)
+  @ManyToOne(() => Client, client => client.users, { onDelete: 'CASCADE' })
   client: Client;
 
   @OneToMany(() => ProjectUser, (pu) => pu.user)

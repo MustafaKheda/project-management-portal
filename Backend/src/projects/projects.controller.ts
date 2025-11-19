@@ -9,6 +9,7 @@ import {
   Put,
   Delete,
   Get,
+  Query,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -20,11 +21,11 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) { }
 
   @Get()
-  async getProjects(@Req() req) {
-    return this.projectsService.getProjects(req.user);
+  async getProjects(@Req() req, @Query("page") page = 1, @Query("limit") limit = 10, @Query("search") search = "") {
+    return this.projectsService.getProjects(req.user, page, limit,search);
   }
   @Post()
   async createProject(@Body() dto: CreateProjectDto, @Req() req) {

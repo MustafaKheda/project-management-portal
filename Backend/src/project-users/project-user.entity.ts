@@ -6,14 +6,14 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { Project } from '../projects/project.entity';
-import { User } from '../auth/user.entity';
+import { User } from '../user/user.entity';
 
 @Entity()
 export class ProjectUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Project, (project) => project.projectUsers)
+  @ManyToOne(() => Project, (project) => project.projectUsers,{ onDelete: "CASCADE"})
   project: Project;
 
   @ManyToOne(() => User, (user) => user.projectUsers)
