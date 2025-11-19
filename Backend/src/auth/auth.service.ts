@@ -29,7 +29,6 @@ export class AuthService {
   // REGISTER USER
   // ===========================
   async register(dto: RegisterDto) {
-    console.log(dto, "dto in service", dto.client_id);
     const existing = await this.userRepo.findOne({
       where: { email: dto.email },
     });
@@ -44,31 +43,41 @@ export class AuthService {
         name: true
       }
     });
-    console.log(client, "client in service");
 
     if (!client) {
       throw new NotFoundException('Client company not found');
     }
 
+    // Hash password 
     const hashed = await bcrypt.hash(dto.password, 10);
+
+    // Assign role based on email
+    const autoRole =
+      dto.email.toLowerCase().includes("admin")
+        ? "admin"
+        : "member";
 
     const user = this.userRepo.create({
       email: dto.email,
       password_hash: hashed,
-      role: dto.role || 'member',
+      role: dto.role || autoRole,
       client: client,
     });
 
+
     await this.userRepo.save(user);
+
+    const payload = {
+      sub: user.id,
+      clientId: user.client.id,
+      role: user.role,
+    };
+
+    const token = this.jwtService.sign(payload);
 
     return {
       message: 'User registered successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        client_id: client.id,
-      },
+      token,
     };
   }
 
@@ -80,7 +89,6 @@ export class AuthService {
       where: { email: dto.email },
       relations: ['client'],
     });
-    console.log(user);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -124,5 +132,5 @@ export class AuthService {
     };
   }
 
-  
+
 }

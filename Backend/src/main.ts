@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Client } from 'pg';
 import { ValidationPipe } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Client as ClientEntity } from './clients/client.entity';
 
 async function bootstrap() {
   // Create DB if it doesn't exist
@@ -33,11 +35,46 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   // Add /api globally
   app.setGlobalPrefix('api');
+  const rawOrigins = process.env.FRONTEND_URLS || "";
+  const whitelist = rawOrigins.split(",").map((url) => url.trim());
+  console.log("Allowed Origins:", whitelist)
   app.enableCors({
-    origin: "http://localhost:5173",   // your React/Vite frontend
+    origin: (origin, callback) => {
+      // Allow server-to-server, mobile apps, Postman
+      if (!origin) return callback(null, true);
+
+      if (whitelist.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },   // your React/Vite frontend
     credentials: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
+  // ------------------------------------------
+  // 3️⃣ Create Default Company (Workspace)
+  // ------------------------------------------
+  const clientRepo = app.get(getRepositoryToken(ClientEntity));
+
+  const defaultCompanyName = "Cloud Flex Pvt Ltd";
+
+  const exists = await clientRepo.findOne({
+    where: { name: defaultCompanyName },
+  });
+
+  if (!exists) {
+    await clientRepo.save(
+      clientRepo.create({
+        name: defaultCompanyName,
+      })
+    );
+    console.log("🏢 Default company created:", defaultCompanyName);
+  } else {
+    console.log("🏢 Default company already exists");
+  }
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
