@@ -105,7 +105,9 @@ export default function AssignUserModal({
             setLoading(true);
             setError(null);
 
-            await api.put(`/projects/${projectId}/users/${user.user_id}`, user);
+            await api.put(`/projects/${projectId}/users/${user.user_id}`, {
+                role: user.role
+            });
 
             handleReset();
             onSuccess && onSuccess();
