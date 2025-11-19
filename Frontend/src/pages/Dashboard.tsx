@@ -106,7 +106,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Numbered Pagination */}
-                    <div className="flex justify-center gap-2">
+                    {totalPages > 1 && <div className="flex justify-center gap-2">
                         {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((num) => (
                             <button
                                 key={num}
@@ -119,7 +119,7 @@ export default function Dashboard() {
                                 {num}
                             </button>
                         ))}
-                    </div>
+                    </div>}
                 </>
             ) : (
                 <EmptyState />

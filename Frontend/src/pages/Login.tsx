@@ -1,21 +1,64 @@
 import React, { useState } from "react";
 import InputField from "../components/InputField.tsx";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
 
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Validation errors
+  const [emailError, setEmailError] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+
+  // API error
+  const [apiError, setApiError] = useState<string>("");
+
+  // -------------------------------
+  // Email Validation
+  // -------------------------------
+  const validateEmail = (value: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!value) return setEmailError("Email is required");
+    if (!regex.test(value)) return setEmailError("Enter a valid email");
+
+    setEmailError("");
+  };
+
+  // -------------------------------
+  // Password Validation
+  // -------------------------------
+  const validatePassword = (value: string) => {
+    if (!value) return setPasswordError("Password is required");
+    if (value.length < 6)
+      return setPasswordError("Password must be at least 6 characters long");
+
+    setPasswordError("");
+  };
+
+  // -------------------------------
+  // Login Handler
+  // -------------------------------
   const handleLogin = async () => {
+    setApiError("");
+
+    // Frontend validation block
+    if (emailError || passwordError || !email || !password) {
+      setApiError("Please fix the errors before logging in.");
+      return;
+    }
+
     setLoading(true);
-    setError("");
 
     try {
-      const res = await fetch("http://localhost:3000/api/auth/login", {
+      const res = await fetch(`${import.meta.env.VITE_BASEURL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -24,27 +67,28 @@ const Login: React.FC = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Invalid email or password");
+        setApiError(data.message || "Invalid email or password");
         setLoading(false);
         return;
       }
 
-      // Save token
+      // Save token + user
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate("/dashboard");
     } catch (err) {
-      setError("Something went wrong");
+      setApiError("Something went wrong. Please try again.");
     }
 
     setLoading(false);
   };
+
   return (
-    <div className="min-h-screen flex transition-all transation-duration-500">
+    <div className="min-h-screen flex transition-all duration-500">
 
       {/* Left Branding */}
-      <div className="hidden md:flex w-1/2 bg-linear-to-br from-blue-600 to-indigo-800 
+      <div className="hidden md:flex w-1/2 bg-gradient-to-br from-blue-600 to-indigo-800 
                       items-center text-white p-10">
         <h1 className="text-4xl font-bold leading-tight">
           Project Management Portal<br />
@@ -60,35 +104,68 @@ const Login: React.FC = () => {
             Login
           </h2>
 
-          {error && (
-            <p className="text-red-500 text-center mb-3">{error}</p>
+          {/* API Error */}
+          {apiError && (
+            <p className="text-red-600 text-center bg-red-100 py-2 rounded-md mb-3 text-sm">
+              {apiError}
+            </p>
           )}
 
-          <InputField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-
-          <InputField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-xl 
-                       text-lg font-semibold hover:bg-blue-700 transition-all mt-4"
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
           >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+            {/* Email */}
+            <InputField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                validateEmail(e.target.value);
+              }}
+              placeholder="you@example.com"
+            />
+            {emailError && <p className="text-red-600 text-sm mt-1">{emailError}</p>}
 
+            {/* Password + Eye */}
+            <div className="relative mt-4">
+              <InputField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  validatePassword(e.target.value);
+                }}
+                placeholder="••••••••"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-500 hover:text-gray-700 transition"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {passwordError && <p className="text-red-600 text-sm mt-1">{passwordError}</p>}
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-2 rounded-xl 
+                         text-lg font-semibold hover:bg-blue-700 transition-all mt-4
+                         disabled:bg-blue-300"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+
+          {/* Register Link */}
           <p className="text-center text-sm text-gray-600 mt-4">
             Don’t have an account?
             <Link to="/register" className="text-blue-600 font-semibold ml-1">
