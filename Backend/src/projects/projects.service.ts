@@ -28,10 +28,10 @@ export class ProjectsService {
   ) { }
 
   async createProject(dto: CreateProjectDto, user: any) {
-    console.log('Creating project for user:', user);
-    // 1. Allow if global admin
+   
+  
     if (user.role !== 'admin') {
-      // 2. Check if user is OWNER in any project of that client
+      // Check if user is OWNER in any project of that client
       const isOwner = await this.projectUserRepo.findOne({
         where: {
           user: { id: user.id },
@@ -47,7 +47,6 @@ export class ProjectsService {
       }
     }
 
-    // 3. Create project
     const project = this.projectRepo.create({
       name: dto.name,
       description: dto.description,
@@ -56,9 +55,9 @@ export class ProjectsService {
 
 
     await this.projectRepo.save(project);
-
+// assigning user as owner if they are not admin
     if (user.role !== 'admin') {
-      // 4. Fetch the full project with relations
+      //  Fetch the full project with relations
       const userToAssign = await this.userRepo.findOne({
         where: { id: user.id },
         relations: ['client'],
@@ -66,7 +65,7 @@ export class ProjectsService {
       if (!userToAssign) {
         throw new NotFoundException('User not found');
       }
-      // 5. Assign user
+      //  Assign user
       const assignment = this.projectUserRepo.create({
         project,
         user: userToAssign,
@@ -84,7 +83,6 @@ export class ProjectsService {
   async assignUser(projectId: string, dto: AssignUserDto, currentUser: any) {
     const { user_id, role } = dto;
 
-    // 1. Load project
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
       relations: ['client'],
@@ -94,14 +92,14 @@ export class ProjectsService {
       throw new NotFoundException('Project not found');
     }
 
-    // 2. Check RBAC – Only Global Admin OR Project Owner
+    // Check RBAC – Only Global Admin OR Project Owner
     await checkProjectAdminOrOwner(
       projectId,
       currentUser,
       this.projectUserRepo,
     );
 
-    // 3. User must exist
+    //  User must exist
     const userToAssign = await this.userRepo.findOne({
       where: { id: user_id },
       relations: ['client'],
@@ -110,14 +108,14 @@ export class ProjectsService {
       throw new NotFoundException('User not found');
     }
 
-    // 4. Prevent assigning users from another client
+    //  Prevent assigning users from another client
     if (userToAssign.client.id !== project.client.id) {
       throw new ForbiddenException(
         'User does not belong to the same client/company',
       );
     }
 
-    // 5. Prevent duplicate assignment
+    //  Prevent duplicate assignment
     const existingAssignment = await this.projectUserRepo.findOne({
       where: {
         project: { id: projectId },
@@ -129,7 +127,7 @@ export class ProjectsService {
       throw new ConflictException('User is already assigned to this project');
     }
 
-    // 6. Assign user
+    //  Assign user
     const assignment = this.projectUserRepo.create({
       project,
       user: userToAssign,
@@ -337,24 +335,21 @@ export class ProjectsService {
       clientId: currentUser.clientId,
     });
 
-  // 🔎 1️⃣ Apply server-side search
+  //  Apply server-side search
   if (search) {
     query.andWhere("LOWER(project.name) LIKE :search", {
       search: `%${search.toLowerCase()}%`,
     });
   }
 
-  // 2️⃣ Get total count after filters
   const total = await query.getCount();
 
-  // 3️⃣ Apply pagination
   const projects = await query
     .skip(skip)
     .take(limit)
     .orderBy("project.created_at", "DESC")
     .getMany();
 
-  // 4️⃣ Format output
   const data = projects.map((project) => ({
     id: project.id,
     name: project.name,

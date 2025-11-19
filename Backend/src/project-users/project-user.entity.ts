@@ -20,7 +20,7 @@ export class ProjectUser {
   user: User;
 
   @Column()
-  role: string; // owner / developer / viewer
+  role: string; 
 
   @CreateDateColumn()
   created_at: Date;

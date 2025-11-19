@@ -9,7 +9,7 @@ import { Client } from 'src/clients/client.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, ProjectUser, User, Client]), // 👈 REQUIRED
+    TypeOrmModule.forFeature([Project, ProjectUser, User, Client]), 
   ],
   providers: [ProjectsService],
   controllers: [ProjectsController],

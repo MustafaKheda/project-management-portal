@@ -15,7 +15,7 @@ export class UserService {
                 id: Not(currentUserId),
                 role: Not('admin'),
             },
-            select: ['id', 'email'], // optional
+            select: ['id', 'email'],
         });
     }
 }

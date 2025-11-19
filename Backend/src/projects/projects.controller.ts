@@ -1,4 +1,3 @@
-// projects/projects.controller.ts
 import {
   Body,
   Controller,
@@ -29,7 +28,7 @@ export class ProjectsController {
   }
   @Post()
   async createProject(@Body() dto: CreateProjectDto, @Req() req) {
-    const user = req.user; // decoded JWT user
+    const user = req.user; 
 
     return this.projectsService.createProject(dto, user);
   }

@@ -21,7 +21,7 @@ import { UserModule } from './user/user.module';
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_NAME || 'assignment',
       entities: [User, Client, Project, ProjectUser],
-      synchronize: true, // KEEP TRUE only for development
+      synchronize: true, 
     }),
     ClientsModule,
     AuthModule,

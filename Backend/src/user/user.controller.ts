@@ -9,7 +9,7 @@ export class UserController {
     @Get('list')
     @UseGuards(JwtAuthGuard)
     async getAllUsersExceptSelf(@Req() req) {
-        const userId = req.user.id; // logged in user
+        const userId = req.user.id;
         return this.userService.getAllUsersExceptSelf(userId);
     }
 }

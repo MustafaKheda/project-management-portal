@@ -19,7 +19,7 @@ export class User {
   @Column()
   password_hash: string;
 
-  @Column({ default: 'member' }) // admin or member
+  @Column({ default: 'member' }) 
   role: string;
 
   @ManyToOne(() => Client, client => client.users, { onDelete: 'CASCADE' })

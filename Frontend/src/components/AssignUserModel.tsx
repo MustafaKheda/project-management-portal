@@ -157,7 +157,7 @@ export default function AssignUserModal({
                         <label key={role} className="flex items-center space-x-1 capitalize">
                             <input
                                 type="radio"
-                                name="role"     // FIXED
+                                name="role"
                                 value={role}
                                 checked={user.role === role}
                                 onChange={handleChange}
